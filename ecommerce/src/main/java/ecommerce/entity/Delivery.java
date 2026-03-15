@@ -27,6 +27,7 @@ public class Delivery {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_status", nullable = false)
     private DeliveryStatus deliveryStatus = DeliveryStatus.SCHEDULED;

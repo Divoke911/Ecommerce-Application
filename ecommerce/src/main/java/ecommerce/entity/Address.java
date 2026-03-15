@@ -36,6 +36,7 @@ public class Address {
     @Column(name = "zip_code", nullable = false)
     private String zipCode;
 
+    @Builder.Default
     @Column(nullable = false)
     private String country = "India";
 

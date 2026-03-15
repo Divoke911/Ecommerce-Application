@@ -22,9 +22,11 @@ public class ProductImage {
     @Column(nullable = false, length = 2048)
     private String url;
 
+    @Builder.Default
     @Column(name = "is_primary", nullable = false)
     private Boolean isPrimary = false;
 
+    @Builder.Default
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
 

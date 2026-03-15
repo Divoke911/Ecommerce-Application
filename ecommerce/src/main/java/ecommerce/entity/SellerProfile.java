@@ -33,9 +33,11 @@ public class SellerProfile {
     @Column(name = "ifsc_code")
     private String ifscCode;
 
+    @Builder.Default
     @Column(name = "seller_rating")
     private BigDecimal sellerRating = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
