@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @SQLRestriction("deleted_at IS NULL")
 public class Transaction {
@@ -35,6 +37,7 @@ public class Transaction {
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_status", nullable = false)
     private TransactionStatus transactionStatus = TransactionStatus.PENDING;

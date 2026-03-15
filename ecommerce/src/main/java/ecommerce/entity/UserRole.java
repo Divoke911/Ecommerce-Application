@@ -6,8 +6,10 @@ import lombok.*;
 
 @Entity
 @Table(name = "user_roles")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class UserRole {
 
@@ -20,8 +22,11 @@ public class UserRole {
     private User user;
 
     @Embeddable
-    @Getter @Setter
-    @NoArgsConstructor @AllArgsConstructor
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode
     public static class UserRoleId implements java.io.Serializable {
         private Long userId;
 

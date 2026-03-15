@@ -9,8 +9,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @SQLRestriction("deleted_at IS NULL")
 public class User {
@@ -30,9 +32,11 @@ public class User {
 
     private String phone;
 
+    @Builder.Default
     @Column(name = "is_email_verified", nullable = false)
     private Boolean isEmailVerified = false;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
@@ -48,6 +52,7 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserRole> roles = new HashSet<>();
 
