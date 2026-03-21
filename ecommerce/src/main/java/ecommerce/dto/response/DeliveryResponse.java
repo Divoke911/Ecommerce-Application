@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Builder
 public class DeliveryResponse {
     private Long id;
+    private Long orderId;
     private DeliveryStatus deliveryStatus;
     private String trackingId;
     private String courierPartner;

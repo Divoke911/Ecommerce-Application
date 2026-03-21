@@ -33,11 +33,9 @@ public class SellerProfile {
     @Column(name = "ifsc_code")
     private String ifscCode;
 
-    @Builder.Default
     @Column(name = "seller_rating")
     private BigDecimal sellerRating = BigDecimal.ZERO;
 
-    @Builder.Default
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
@@ -46,6 +44,11 @@ public class SellerProfile {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Fix: return user ID safely
+    public Long getUserId() {
+        return user != null ? user.getId() : userId;
+    }
 
     @PrePersist
     protected void onCreate() {

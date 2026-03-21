@@ -1,5 +1,6 @@
 package ecommerce.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ecommerce.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -55,7 +56,9 @@ public class Order {
     @Column(name = "final_amount", nullable = false)
     private BigDecimal finalAmount;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private List<OrderItem> items;
 
     @Column(name = "created_at", updatable = false)

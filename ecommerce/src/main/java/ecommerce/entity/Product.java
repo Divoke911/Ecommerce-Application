@@ -1,5 +1,6 @@
 package ecommerce.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
@@ -44,7 +45,9 @@ public class Product {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private List<ProductImage> images;
 
     @Column(name = "created_at", updatable = false)

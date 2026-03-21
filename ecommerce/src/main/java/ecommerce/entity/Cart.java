@@ -1,5 +1,6 @@
 package ecommerce.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ecommerce.enums.CartStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,7 +29,9 @@ public class Cart {
     @Column(nullable = false)
     private CartStatus status = CartStatus.OPEN;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private List<CartItem> items;
 
     @Column(name = "created_at", updatable = false)

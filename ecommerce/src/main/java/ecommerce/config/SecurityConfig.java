@@ -5,6 +5,7 @@ import ecommerce.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -27,95 +28,138 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    private final CustomUserDetailsService userDetailsService;
+        private final JwtAuthFilter jwtAuthFilter;
+        private final CustomUserDetailsService userDetailsService;
 
-    // ── Public routes (no JWT needed) ─────────────────────
-    private static final String[] PUBLIC_URLS = {
-            // Auth
-            "/api/auth/register",
-            "/api/auth/verify-email",
-            "/api/auth/resend-otp",
-            "/api/auth/login",
-            "/api/auth/verify-login-otp",
-            "/api/auth/forgot-password",
-            "/api/auth/reset-password",
-            "/api/auth/refresh",
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http)
+                        throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
 
-            // Products & Categories (browsing is public)
-            "/api/products",
-            "/api/products/{id}",
-            "/api/categories",
-            "/api/categories/{id}",
+                                                // ── Auth (all public) ──────────────────────
+                                                .requestMatchers("/api/auth/**").permitAll()
 
-            // Swagger
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/v3/api-docs/**"
-    };
+                                                // ── Products GET (public) ──────────────────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/products/**")
+                                                .permitAll()
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // Disable CSRF (we use JWT, not sessions)
-            .csrf(AbstractHttpConfigurer::disable)
+                                                // ── Categories GET (public) ────────────────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/categories/**")
+                                                .permitAll()
 
-            // CORS config
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                                // ── Reviews GET (public) ───────────────────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/reviews/**")
+                                                .permitAll()
 
-            // Session management — stateless (JWT based)
-            .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                                // ── Seller public profile GET (public) ─────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/seller/profile/*")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/users/*/seller-profile")
+                                                .permitAll()
 
-            // Route permissions
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(PUBLIC_URLS).permitAll()
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    .requestMatchers("/api/seller/**").hasRole("SELLER")
-                    .anyRequest().authenticated()
-            )
+                                                // ── Swagger (public) ───────────────────────
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
 
-            // Auth provider
-            .authenticationProvider(authenticationProvider())
+                                                // ── Admin only ─────────────────────────────
+                                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-            // Add JWT filter before Spring's default auth filter
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                                // ── Seller product write operations ────────
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/products")
+                                                .hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.PUT,
+                                                                "/api/products/*")
+                                                .hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.DELETE,
+                                                                "/api/products/*")
+                                                .hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/products/my")
+                                                .hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/products/*/images")
+                                                .hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.DELETE,
+                                                                "/api/products/*/images/*")
+                                                .hasRole("SELLER")
 
-        return http.build();
-    }
+                                                // ── Category write (ADMIN only) ────────────
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/categories")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT,
+                                                                "/api/categories/*")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE,
+                                                                "/api/categories/*")
+                                                .hasRole("ADMIN")
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
+                                                // ── All other routes need authentication ───
+                                                .requestMatchers("/api/users/**").authenticated()
+                                                .requestMatchers("/api/addresses/**").authenticated()
+                                                .requestMatchers("/api/cart/**").authenticated()
+                                                .requestMatchers("/api/orders/**").authenticated()
+                                                .requestMatchers("/api/wishlist/**").authenticated()
+                                                .requestMatchers("/api/reviews/**").authenticated()
+                                                .requestMatchers("/api/notifications/**").authenticated()
+                                                .requestMatchers("/api/transactions/**").authenticated()
+                                                .requestMatchers("/api/deliveries/**").authenticated()
+                                                .requestMatchers("/api/seller/**").authenticated()
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+                                                .anyRequest().authenticated())
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(jwtAuthFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                return http.build();
+        }
 
-    // ── CORS — allow React frontend ───────────────────────
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",   // React dev server
-                "http://localhost:5173"    // Vite dev server
-        ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(passwordEncoder());
+                provider.setUserDetailsService(userDetailsService);
+                return provider;
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(List.of(
+                                "http://localhost:3000",
+                                "http://localhost:5173"));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT",
+                                "DELETE", "PATCH", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 }
