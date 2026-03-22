@@ -283,6 +283,15 @@ public class GlobalExceptionHandler {
                         "Something went wrong. Please try again later."));
     }
 
+    // ── 400 - Runtime exception ───────────────────────────
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRuntime(
+            RuntimeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     // ── 500 - Catch all ───────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(
